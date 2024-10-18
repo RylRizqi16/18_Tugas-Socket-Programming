@@ -8,61 +8,61 @@ ADDRESS = (SERVER, PORT)
 PASSWORD = "123" 
 print(SERVER)
 
-# Queue to store incoming messages
 messages = queue.Queue()
 
-# List to track connected clients
 clients = []
+clients_names = []
 
-# Create UDP socket
 server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server.bind((SERVER, PORT))
 
-# Function to receive messages
 def receive():
     while True:
         try:
-            message, addr = server.recvfrom(1024)  # Receive message and client address
-            messages.put((message, addr))  # Add message to the queue
+            message, addr = server.recvfrom(1024)
+            messages.put((message, addr))
         except Exception as e:
             print(f"Receive Error: {e}")
             pass
 
-# Function to broadcast messages to all clients
 def broadcast():
     while True:
         while not messages.empty():
-            message, addr = messages.get()  # Get message from queue
+            message, addr = messages.get()
             decoded_message = message.decode()
             print(f"Received from {addr}: {decoded_message}")
 
             if addr not in clients:
-                # Check if the message contains the password
-                if decoded_message.startswith("password:"):
-                    password = decoded_message.split(":")[1].strip()
-                    if password == PASSWORD:
-                        clients.append(addr)  # Add client to authenticated clients list
+                try:
+                    name, password = decoded_message.split(":")
+                    name = name.strip()
+                    password = password.strip()
+
+                    if password == PASSWORD and name not in clients_names:
+                        clients_names.append(name)
+                        clients.append(addr) 
+                        server.sendto(f"{name} joined!".encode(), addr)
                         server.sendto("Password accepted. You are now connected.".encode(), addr)
-                    else:
-                        server.sendto("Incorrect password.".encode(), addr)
-            else:
-                # If the client is already authenticated, check for signup tag
-                if decoded_message.startswith("SIGNUP_TAG"):
-                    name = decoded_message.split(":")[1].strip()
-                    # Notify all clients that the user has joined
-                    for client in clients:
-                        server.sendto(f"{name} joined!".encode(), client)
-                else:
-                    # Forward the message to all connected clients
-                    for client in clients:
-                        try:
+
+                        broadcast_message = f"{name} has joined the chat!"
+                        for client in clients:
                             if client != addr:
-                                server.sendto(message, client)
+                                server.sendto(broadcast_message.encode(), client)
+                    elif password != PASSWORD:
+                        server.sendto("Incorrect password.".encode(), addr)
+                    elif name in clients_names:
+                        server.sendto("Name already taken.".encode(), addr)
+                except ValueError:
+                    server.sendto("Invalid message format.".encode(), addr)
+            else:
+                for client in clients:
+                    if client != addr:
+                        try:
+                            server.sendto(message, client)
                         except Exception as e:
                             print(f"Broadcast Error: {e}")
-                            clients.remove(client)  # Remove client if there's an error sending
+                            clients.remove(client)
 
-# Create and start threads for receiving and broadcasting messages
 t1 = threading.Thread(target=receive)
 t2 = threading.Thread(target=broadcast)
 
