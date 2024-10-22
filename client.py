@@ -55,4 +55,4 @@ while True:
 
 # Close the client socket
 client.close()
-t.join()  # Ensure the thread terminates before exiting
+t.join()  # ensure the thread terminates before exiting

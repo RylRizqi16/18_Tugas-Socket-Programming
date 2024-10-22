@@ -45,7 +45,7 @@ def load_messages(user_pair):
     except FileNotFoundError:
         return []
 
-# Fungsi membuat kombinasi nama pengguna yang terhubung
+# Fungsi untuk membuat kombinasi nama pengguna yang terhubung
 def get_user_pair(name1, name2):
     return ":".join(sorted([name1, name2]))
 
