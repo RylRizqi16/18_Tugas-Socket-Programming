@@ -1,4 +1,4 @@
-Cara menajalnkan program : 
+Cara menjalankan program : 
 1. Download server,client,dan rsa_module.Simpan di direktori yang sama.
 2. siapkan minimal 2 terminal untuk menjalankan server dan client.
 3. Program bisa berjalan secara lokal(satu device) atau di network(pastikan terhubung dengan wifi/jairngan yang sama).
