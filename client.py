@@ -1,7 +1,7 @@
 import socket
 import threading
 import random
-import binascii  # Import binascii untuk CRC32
+import binascii
 from rsa_module import encrypt
 
 SERVER_IP = input("Enter IP Address: ")
@@ -11,7 +11,6 @@ ADDRESS = (SERVER_IP, PORT)
 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 client.bind(('', random.randint(8000, 9000)))
 
-# Request the public key from the server
 client.sendto(b'GET_PUBLIC_KEY', ADDRESS)
 public_key_data, _ = client.recvfrom(1024)
 public_key, n = map(int, public_key_data.decode().split(','))
@@ -19,7 +18,6 @@ public_key, n = map(int, public_key_data.decode().split(','))
 name = input("Nickname: ")
 password = input("Enter the password: ")
 
-# Encrypt and send authentication message
 auth_message = f"{name}:{password}"
 encrypted_auth_message = encrypt(auth_message, public_key, n)
 client.sendto(','.join(map(str, encrypted_auth_message)).encode(), ADDRESS)
@@ -52,11 +50,8 @@ while True:
         stop_receiving = True
         break
     else:
-        # Calculate checksum using CRC32
         checksum = binascii.crc32(message.encode())
         message_with_checksum = f"{name}:{message}:{checksum}"
-        
-        # Encrypt the message with checksum
         encrypted_message = encrypt(message_with_checksum, public_key, n)
         client.sendto(','.join(map(str, encrypted_message)).encode(), ADDRESS)
 
