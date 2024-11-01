@@ -1,7 +1,7 @@
 import socket
 import threading
 import queue
-import binascii  # Import binascii untuk CRC32
+import binascii
 from datetime import datetime
 from rsa_module import generate_keys, encrypt, decrypt
 
@@ -15,7 +15,6 @@ messages = queue.Queue()
 clients = []
 clients_names = []
 
-# Generate RSA keys
 public_key, private_key, n = generate_keys()
 
 server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -23,11 +22,9 @@ server.bind((SERVER, PORT))
 
 LOG_FILE = "chat_history.txt"
 
-# Fungsi untuk mendapatkan timestamp
 def get_timestamp():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-# Fungsi untuk menyimpan pesan ke file dengan timestamp
 def save_message(message):
     timestamp = get_timestamp()  
     full_message = f"[{timestamp}] {message}"
@@ -36,7 +33,6 @@ def save_message(message):
     with open(LOG_FILE, "a") as file:
         file.write(f"{full_message}\n")
 
-# Fungsi untuk memuat seluruh pesan dari file riwayat obrolan
 def load_messages():
     try:
         with open(LOG_FILE, "r") as file:
@@ -49,7 +45,6 @@ def receive():
     while True:
         message, addr = server.recvfrom(1024)
         if message == b'GET_PUBLIC_KEY':
-            # Send the public key to the client
             server.sendto(f"{public_key},{n}".encode(), addr)
             continue
 
@@ -69,7 +64,6 @@ def broadcast():
                     name = name.strip()
                     password = password.strip()
 
-                    # Validate password and username
                     if password != PASSWORD:
                         server.sendto("Incorrect password.".encode(), addr)
                     elif name in clients_names:
@@ -80,13 +74,11 @@ def broadcast():
                         server.sendto(f"{name} joined!".encode(), addr)
                         server.sendto("Password accepted. You are now connected.".encode(), addr)
 
-                        # Send chat history to new user
                         chat_history = load_messages()
                         if chat_history:
                             for line in chat_history:
                                 server.sendto(line.encode(), addr)
 
-                        # Notify all users about the new user
                         broadcast_message = f"{name} has joined the chat!"
                         save_message(broadcast_message)
                         for client in clients:
@@ -95,21 +87,18 @@ def broadcast():
                 except ValueError:
                     server.sendto("Invalid message format.".encode(), addr)
             else:
-                # Verif checksum
                 try:
                     name, message_text, received_checksum = decoded_message.rsplit(":", 2)
                     received_checksum = int(received_checksum)
                     calculated_checksum = binascii.crc32(message_text.encode())
 
                     if received_checksum == calculated_checksum:
-                        # Save and broadcast message if checksum is correct
                         broadcast_message = f"{name}: {message_text}"
                         save_message(broadcast_message)
                         for client in clients:
                             if client != addr:
                                 server.sendto(f"[{get_timestamp()}] {broadcast_message}".encode(), client)
                     else:
-                        # NNgabarin kalau pesan rusak
                         server.sendto("Message integrity compromised!".encode(), addr)
 
                 except ValueError:
