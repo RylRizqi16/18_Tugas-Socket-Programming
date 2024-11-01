@@ -1,7 +1,6 @@
 import random
 import math
 
-# Function to check if a number is prime
 def is_prime(number):
     if number <= 1:
         return False
@@ -10,14 +9,12 @@ def is_prime(number):
             return False
     return True
 
-# Function to generate a random prime number within a range
 def generate_prime(min_value, max_value):
     while True:
         prime = random.randint(min_value, max_value)
         if is_prime(prime):
             return prime
 
-# Function to calculate the modular inverse using the Extended Euclidean Algorithm
 def mod_inverse(e, phi):
     def egcd(a, b):
         if a == 0:
@@ -30,7 +27,6 @@ def mod_inverse(e, phi):
         raise ValueError("Mod_inverse does not exist!")
     return x % phi
 
-# Function to generate RSA keys
 def generate_keys():
     p = generate_prime(1000, 50000)
     q = generate_prime(1000, 50000)
@@ -45,20 +41,18 @@ def generate_keys():
         e = random.randint(3, phi_n - 1)
 
     d = mod_inverse(e, phi_n)
-    return e, d, n  # public key, private key, modulus
+    return e, d, n
 
-# Function to encrypt a message
 def encrypt(message, public_key, n):
     if isinstance(message, bytes):
-        message = message.decode()  # Decode bytes to string
+        message = message.decode()
     return [pow(ord(ch), public_key, n) for ch in message]
 
-# Function to decrypt a message
 def decrypt(ciphertext, private_key, n):
     decrypted_chars = []
     for ch in ciphertext:
         decrypted_value = pow(ch, private_key, n)
-        if 0 <= decrypted_value <= 0x10FFFF:  # Ensure it's a valid Unicode character
+        if 0 <= decrypted_value <= 0x10FFFF:
             decrypted_chars.append(chr(decrypted_value))
         else:
             return "Invalid message."
